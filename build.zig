@@ -62,15 +62,15 @@ pub fn build(b: *std.Build) void {
         "etc/clumsy.rc",
     });
 
-    // Set up target
-    const target = b.resolveTargetQuery(.{
+    // Set up target query
+    const target_query: std.Target.Query = .{
         .cpu_arch = switch (arch) {
             .x64 => .x86_64,
             .x86 => .x86,
         },
         .os_tag = .windows,
         .abi = .gnu,
-    });
+    };
 
     // Set up optimization
     const optimize: std.builtin.OptimizeMode = switch (conf) {
@@ -82,9 +82,11 @@ pub fn build(b: *std.Build) void {
     // Create executable
     const exe = b.addExecutable(.{
         .name = "synet",
-        .target = target,
-        .optimize = optimize,
-        .win32_manifest = null,
+        .root_module = b.createModule(.{
+            .root_source_file = null,
+            .target = b.resolveTargetQuery(target_query),
+            .optimize = optimize,
+        }),
     });
 
     // Set subsystem
