@@ -80,14 +80,15 @@ pub fn build(b: *std.Build) void {
     };
 
     // Create executable
+    const resolved_target = b.resolveTargetQuery(target_query);
     const exe = b.addExecutable(.{
         .name = "synet",
+        .root_module = b.createModule(.{
+            .root_source_file = null,
+            .target = resolved_target,
+            .optimize = optimize,
+        }),
     });
-
-    // Configure target and optimize
-    const resolved_target = b.resolveTargetQuery(target_query);
-    exe.root_module.resolved_target = resolved_target;
-    exe.root_module.optimize = optimize;
 
     // Set subsystem
     exe.subsystem = switch (conf) {
