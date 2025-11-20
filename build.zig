@@ -84,8 +84,9 @@ pub fn build(b: *std.Build) void {
         .name = "synet",
     });
 
-    // Configure target and optimize via root_module
-    exe.root_module.resolved_target = b.resolveTargetQuery(target_query);
+    // Configure target and optimize
+    const resolved_target = b.resolveTargetQuery(target_query);
+    exe.root_module.resolved_target = resolved_target;
     exe.root_module.optimize = optimize;
 
     // Set subsystem
