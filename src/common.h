@@ -179,6 +179,10 @@ BOOL IsElevated();
 BOOL IsRunAsAdmin();
 BOOL tryElevate(HWND hWnd, BOOL silent);
 
+// auth
+BOOL showAuthDialog(void);
+BOOL isLicenseValid(void);
+
 // icons
 extern const unsigned char icon8x8[8*8];
 

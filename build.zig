@@ -96,6 +96,7 @@ pub fn build(b: *std.build.Builder) void {
 
     exe.step.dependOn(&cmd.step);
     exe.addObjectFile(res_obj_path);
+    exe.addCSourceFile("src/auth.c", &.{""});
     exe.addCSourceFile("src/divert.c", &.{""});
     exe.addCSourceFile("src/elevate.c", &.{""});
     exe.addCSourceFile("src/lag.c", &.{""});
@@ -127,6 +128,7 @@ pub fn build(b: *std.build.Builder) void {
     exe.linkSystemLibrary("comdlg32");
     exe.linkSystemLibrary("uuid");
     exe.linkSystemLibrary("ole32");
+    exe.linkSystemLibrary("winhttp");
 
     const exe_install_step = b.addInstallArtifact(exe);  
     if (conf == .Ship)

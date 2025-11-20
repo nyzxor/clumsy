@@ -106,8 +106,8 @@ EAT_SPACE:  while (isspace(*current)) { ++current; }
     {
         LOG("Failed to load from config. Fill in a simple one.");
         // config is missing or ill-formed. fill in some simple ones
-        filters[filtersSize].filterName = "loopback packets";
-        filters[filtersSize].filterValue = "outbound and ip.DstAddr >= 127.0.0.1 and ip.DstAddr <= 127.255.255.255";
+        filters[filtersSize].filterName = "TCP with payload";
+        filters[filtersSize].filterValue = "tcp.PayloadLength > 0";
         filtersSize = 1;
     }
 }
@@ -124,8 +124,14 @@ void init(int argc, char* argv[]) {
     // iup inits
     IupOpen(&argc, &argv);
 
+    // Show license activation dialog
+    if (!showAuthDialog()) {
+        IupClose();
+        exit(0);
+    }
+
     // status label with improved styling
-    statusLabel = IupLabel("Ready to start network simulation.");
+    statusLabel = IupLabel("Ready. Configure filter and click Start.");
     IupSetAttribute(statusLabel, "EXPAND", "HORIZONTAL");
     IupSetAttribute(statusLabel, "PADDING", "12x8");
     IupSetAttribute(statusLabel, "ALIGNMENT", "ACENTER");
@@ -227,7 +233,7 @@ void init(int argc, char* argv[]) {
         )
     );
 
-    IupSetAttribute(dialog, "TITLE", "Synet " SYNET_VERSION " - Network Lag Simulator");
+    IupSetAttribute(dialog, "TITLE", "Synet " SYNET_VERSION);
     IupSetAttribute(dialog, "SIZE", "520x"); // add padding manually to width
     IupSetAttribute(dialog, "RESIZE", "NO");
     IupSetAttribute(dialog, "BGCOLOR", "250 250 250");
@@ -364,7 +370,7 @@ static int uiStartCb(Ihandle *ih) {
     }
 
     // successfully started
-    showStatus("Simulation active. Enable lag to start delaying packets.");
+    showStatus("Active. Enable lag to apply delay to packets.");
     IupSetAttribute(filterText, "ACTIVE", "NO");
     IupSetAttribute(filterButton, "TITLE", "Stop");
     IupSetAttribute(filterButton, "BGCOLOR", "211 47 47");

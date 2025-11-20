@@ -1,7 +1,10 @@
-# filters presets. clumsy will capture packets base filter criteria
-# each entry must contains single line
+# Synet filter presets
+# each entry must contain a single line
 # filter-name:filter-text
 # see <https://github.com/basil00/Divert/wiki/WinDivert-Documentation#7-filter-language> for details
+
+# TCP packets with payload (recommended)
+TCP with payload: tcp.PayloadLength > 0
 
 # loopback packets can only be filtered using 'outbound'.
 localhost ipv4 all: outbound and loopback
