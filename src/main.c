@@ -9,13 +9,6 @@
 // ! the order decides which module get processed first
 Module* modules[MODULE_CNT] = {
     &lagModule,
-    &dropModule,
-    &throttleModule,
-    &dupModule,
-    &oodModule,
-    &tamperModule,
-    &resetModule,
-	&bandwidthModule,
 };
 
 volatile short sendState = SEND_STATUS_NONE;
@@ -131,11 +124,12 @@ void init(int argc, char* argv[]) {
     // iup inits
     IupOpen(&argc, &argv);
 
-    // this is so easy to get wrong so it's pretty worth noting in the program
-    statusLabel = IupLabel("NOTICE: When capturing localhost (loopback) packets, you CAN'T include inbound criteria.\n"
-        "Filters like 'udp' need to be 'udp and outbound' to work. See readme for more info.");
+    // status label with improved styling
+    statusLabel = IupLabel("Ready to start network simulation.");
     IupSetAttribute(statusLabel, "EXPAND", "HORIZONTAL");
-    IupSetAttribute(statusLabel, "PADDING", "8x8");
+    IupSetAttribute(statusLabel, "PADDING", "12x8");
+    IupSetAttribute(statusLabel, "ALIGNMENT", "ACENTER");
+    IupSetAttribute(statusLabel, "FGCOLOR", "60 60 60");
 
     topFrame = IupFrame(
         topVbox = IupVbox(
@@ -164,14 +158,17 @@ void init(int argc, char* argv[]) {
         parameterized = 1;
     }
 
-    IupSetAttribute(topFrame, "TITLE", "Filtering");
+    IupSetAttribute(topFrame, "TITLE", "Network Filter");
     IupSetAttribute(topFrame, "EXPAND", "HORIZONTAL");
     IupSetAttribute(filterText, "EXPAND", "HORIZONTAL");
+    IupSetAttribute(filterText, "PADDING", "4x4");
     IupSetCallback(filterText, "VALUECHANGED_CB", (Icallback)uiFilterTextCb);
-    IupSetAttribute(filterButton, "PADDING", "8x");
+    IupSetAttribute(filterButton, "PADDING", "16x4");
+    IupSetAttribute(filterButton, "FGCOLOR", "255 255 255");
+    IupSetAttribute(filterButton, "BGCOLOR", "56 142 60");
     IupSetCallback(filterButton, "ACTION", uiStartCb);
-    IupSetAttribute(topVbox, "NCMARGIN", "4x4");
-    IupSetAttribute(topVbox, "NCGAP", "4x2");
+    IupSetAttribute(topVbox, "NCMARGIN", "8x8");
+    IupSetAttribute(topVbox, "NCGAP", "8x4");
     IupSetAttribute(controlHbox, "ALIGNMENT", "ACENTER");
 
     // setup state icon
@@ -191,15 +188,15 @@ void init(int argc, char* argv[]) {
     // set filter text value since the callback won't take effect before main loop starts
     IupSetAttribute(filterText, "VALUE", filters[0].filterValue);
 
-    // functionalities frame 
+    // functionalities frame
     bottomFrame = IupFrame(
         bottomVbox = IupVbox(
             NULL
         )
     );
-    IupSetAttribute(bottomFrame, "TITLE", "Functions");
-    IupSetAttribute(bottomVbox, "NCMARGIN", "4x4");
-    IupSetAttribute(bottomVbox, "NCGAP", "4x2");
+    IupSetAttribute(bottomFrame, "TITLE", "Lag Simulation");
+    IupSetAttribute(bottomVbox, "NCMARGIN", "8x8");
+    IupSetAttribute(bottomVbox, "NCGAP", "8x4");
 
     // create icons
     noneIcon = IupImage(8, 8, icon8x8);
@@ -230,16 +227,17 @@ void init(int argc, char* argv[]) {
         )
     );
 
-    IupSetAttribute(dialog, "TITLE", "clumsy " CLUMSY_VERSION);
-    IupSetAttribute(dialog, "SIZE", "480x"); // add padding manually to width
+    IupSetAttribute(dialog, "TITLE", "Synet " SYNET_VERSION " - Network Lag Simulator");
+    IupSetAttribute(dialog, "SIZE", "520x"); // add padding manually to width
     IupSetAttribute(dialog, "RESIZE", "NO");
+    IupSetAttribute(dialog, "BGCOLOR", "250 250 250");
     IupSetCallback(dialog, "SHOW_CB", (Icallback)uiOnDialogShow);
 
 
     // global layout settings to affect childrens
     IupSetAttribute(dialogVBox, "ALIGNMENT", "ACENTER");
-    IupSetAttribute(dialogVBox, "NCMARGIN", "4x4");
-    IupSetAttribute(dialogVBox, "NCGAP", "4x2");
+    IupSetAttribute(dialogVBox, "NCMARGIN", "8x8");
+    IupSetAttribute(dialogVBox, "NCGAP", "8x4");
 
     // setup timer
     timer = IupTimer();
@@ -292,7 +290,7 @@ static BOOL check32RunningOn64(HWND hWnd) {
     BOOL is64ret;
     // consider IsWow64Process return value
     if (IsWow64Process(GetCurrentProcess(), &is64ret) && is64ret) {
-        MessageBox(hWnd, (LPCSTR)"You're running 32bit clumsy on 64bit Windows, which wouldn't work. Please use the 64bit clumsy version.",
+        MessageBox(hWnd, (LPCSTR)"You're running 32bit Synet on 64bit Windows, which wouldn't work. Please use the 64bit Synet version.",
             (LPCSTR)"Aborting", MB_OK);
         return TRUE;
     }
@@ -301,7 +299,7 @@ static BOOL check32RunningOn64(HWND hWnd) {
 
 static BOOL checkIsRunning() {
     //It will be closed and destroyed when programm terminates (according to MSDN).
-    HANDLE hStartEvent = CreateEventW(NULL, FALSE, FALSE, L"Global\\CLUMSY_IS_RUNNING_EVENT_NAME");
+    HANDLE hStartEvent = CreateEventW(NULL, FALSE, FALSE, L"Global\\SYNET_IS_RUNNING_EVENT_NAME");
 
     if (hStartEvent == NULL)
         return TRUE;
@@ -333,7 +331,7 @@ static int uiOnDialogShow(Ihandle *ih, int state) {
 
     exit = checkIsRunning();
     if (exit) {
-        MessageBox(hWnd, (LPCSTR)"Theres' already an instance of clumsy running.",
+        MessageBox(hWnd, (LPCSTR)"There's already an instance of Synet running.",
             (LPCSTR)"Aborting", MB_OK);
         return IUP_CLOSE;
     }
@@ -366,9 +364,10 @@ static int uiStartCb(Ihandle *ih) {
     }
 
     // successfully started
-    showStatus("Started filtering. Enable functionalities to take effect.");
+    showStatus("Simulation active. Enable lag to start delaying packets.");
     IupSetAttribute(filterText, "ACTIVE", "NO");
     IupSetAttribute(filterButton, "TITLE", "Stop");
+    IupSetAttribute(filterButton, "BGCOLOR", "211 47 47");
     IupSetCallback(filterButton, "ACTION", uiStopCb);
     IupSetAttribute(timer, "RUN", "YES");
 
@@ -386,6 +385,7 @@ static int uiStopCb(Ihandle *ih) {
 
     IupSetAttribute(filterText, "ACTIVE", "YES");
     IupSetAttribute(filterButton, "TITLE", "Start");
+    IupSetAttribute(filterButton, "BGCOLOR", "56 142 60");
     IupSetAttribute(filterButton, "ACTIVE", "YES");
     IupSetCallback(filterButton, "ACTION", uiStartCb);
 
@@ -398,7 +398,7 @@ static int uiStopCb(Ihandle *ih) {
     sendState = SEND_STATUS_NONE;
     IupSetAttribute(stateIcon, "IMAGE", "none_icon");
 
-    showStatus("Stopped. To begin again, edit criteria and click Start.");
+    showStatus("Stopped. Configure filter and click Start to begin.");
     return IUP_DEFAULT;
 }
 

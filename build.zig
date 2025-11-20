@@ -43,7 +43,7 @@ pub fn build(b: *std.build.Builder) void {
     if (conf == .Ship)
         b.installFile("LICENSE", b.fmt("{s}/License.txt", .{prefix}));
 
-    const res_obj_path = b.fmt("{s}/clumsy_res.obj", .{tmp_path});
+    const res_obj_path = b.fmt("{s}/synet_res.obj", .{tmp_path});
 
     const rc_exe = b.findProgram(&.{
         "rc",
@@ -68,7 +68,7 @@ pub fn build(b: *std.build.Builder) void {
         "etc/clumsy.rc",
     });
 
-    const exe = b.addExecutable("clumsy", null);
+    const exe = b.addExecutable("synet", null);
 
     switch (conf) {
         .Debug => {
@@ -96,19 +96,11 @@ pub fn build(b: *std.build.Builder) void {
 
     exe.step.dependOn(&cmd.step);
     exe.addObjectFile(res_obj_path);
-    exe.addCSourceFile("src/bandwidth.c", &.{""});
     exe.addCSourceFile("src/divert.c", &.{""});
-    exe.addCSourceFile("src/drop.c", &.{""});
-    exe.addCSourceFile("src/duplicate.c", &.{""});
     exe.addCSourceFile("src/elevate.c", &.{""});
     exe.addCSourceFile("src/lag.c", &.{""});
     exe.addCSourceFile("src/main.c", &.{""});
-    exe.addCSourceFile("src/ood.c", &.{""});
     exe.addCSourceFile("src/packet.c", &.{""});
-    exe.addCSourceFile("src/reset.c", &.{""});
-    exe.addCSourceFile("src/tamper.c", &.{""});
-    exe.addCSourceFile("src/throttle.c", &.{""});
-    exe.addCSourceFile("src/utils.c", &.{""});
     exe.addCSourceFile("src/utils.c", &.{""});
 
     if (arch == .x86)
@@ -139,7 +131,7 @@ pub fn build(b: *std.build.Builder) void {
     const exe_install_step = b.addInstallArtifact(exe);  
     if (conf == .Ship)
     {
-        const remove_pdb_step = RemoveOutFile.create(b, "clumsy.pdb");
+        const remove_pdb_step = RemoveOutFile.create(b, "synet.pdb");
         remove_pdb_step.step.dependOn(&exe_install_step.step);
         b.getInstallStep().dependOn(&remove_pdb_step.step);
     }
